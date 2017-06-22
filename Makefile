@@ -1,15 +1,15 @@
 
-CFLAGS := -g -Wall
+CFLAGS:=-g -Wall
+PROGRAM:=dsh
 
-PROGRAM := dsh
+OBJ=dsh.o\
+    history.o\
+    cmd.o\
+    builtin.o\
 
 all: $(PROGRAM)
 
-$(PROGRAM): dsh.o history.o
-
-dsh.o: history.o history.h
-
-history.o: history.h
+$(PROGRAM): $(OBJ)
 
 clean:
 	$(RM) *.o $(PROGRAM)
