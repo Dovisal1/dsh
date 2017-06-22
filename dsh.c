@@ -21,7 +21,7 @@ void die(int status, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
-	vprintf(fmt,ap);
+	vprintf(fmt, ap);
 	va_end(ap);
 
 	exit(status);
@@ -30,7 +30,7 @@ void die(int status, const char *fmt, ...)
 pid_t dfork()
 {
 	pid_t pid = fork();
-	if(pid == -1)
+	if (pid == -1)
 		die(-1, "fork error");
 	return pid;
 }
@@ -46,11 +46,10 @@ static void int_handler(int signum)
 	}
 }
 
-
 void run_file(struct cmd *cmd)
 {
 	pid_t pid = dfork();
-	switch(pid) {
+	switch (pid) {
 	case 0:
 		execvp(cmd->argv[0], cmd->argv);
 		/* if error */
@@ -67,8 +66,8 @@ void run_file(struct cmd *cmd)
 
 void run_builtin(struct cmd *cmd)
 {
-	switch(builtin_num(cmd)) {
-	case 0: /* echo */
+	switch (builtin_num(cmd)) {
+	case 0:		/* echo */
 		run_echo(cmd);
 		break;
 	case 1:
@@ -100,11 +99,11 @@ void runcmd(struct cmd *cmd)
 void run_recall(struct cmd *cmd)
 {
 	char *argv0 = cmd->argv[0];
-	argv0++; /* we know *argv0=='!' */
+	argv0++;		/* we know *argv0=='!' */
 
 	int hist_item;
 
-	if(*argv0 == '!') /* !! */
+	if (*argv0 == '!')	/* !! */
 		hist_item = -1;
 	else
 		hist_item = atoi(argv0);
@@ -132,7 +131,7 @@ int main()
 	sigfillset(&sa.sa_mask);
 	sigaction(SIGINT, &sa, NULL);
 
-	while(getcmd(line, sizeof(line))) {
+	while (getcmd(line, sizeof(line))) {
 		struct cmd *cmd = parseline(line);
 
 		if (!cmd)
