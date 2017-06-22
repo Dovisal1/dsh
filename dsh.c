@@ -14,6 +14,8 @@
 #include "history.h"
 #include "cmd.h"
 
+pid_t fg_pid;
+
 /* exec, never return */
 void die(int status, const char *fmt, ...)
 {
@@ -33,9 +35,22 @@ pid_t dfork()
 	return pid;
 }
 
+static void int_handler(int signum)
+{
+	switch (signum) {
+	case SIGINT:
+		if (fg_pid)
+			kill(fg_pid, SIGINT);
+		printf("\n");
+		break;
+	}
+}
+
+
 void run_file(struct cmd *cmd)
 {
-	switch(dfork()) {
+	pid_t pid = dfork();
+	switch(pid) {
 	case 0:
 		execvp(cmd->argv[0], cmd->argv);
 		/* if error */
@@ -43,6 +58,7 @@ void run_file(struct cmd *cmd)
 		exit(1);
 		break;
 	default:
+		fg_pid = pid;
 		wait(NULL);
 		break;
 	}
@@ -108,6 +124,13 @@ int main()
 {
 	hist_init();
 	char line[4096];
+	fg_pid = 0;
+
+	struct sigaction sa;
+	sa.sa_handler = &int_handler;
+	sa.sa_flags = SA_RESTART;
+	sigfillset(&sa.sa_mask);
+	sigaction(SIGINT, &sa, NULL);
 
 	while(getcmd(line, sizeof(line))) {
 		struct cmd *cmd = parseline(line);
@@ -117,6 +140,7 @@ int main()
 
 		runcmd(cmd);
 		free_cmd(cmd);
+		fg_pid = 0;
 	}
 	hist_clean();
 	printf("\n");
