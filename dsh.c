@@ -10,6 +10,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "history.h"
+
 #define PROMPT "dsh> "
 #define WHITESPACE " \t\r\n\v"
 #define SYMBOLS
@@ -72,27 +74,48 @@ struct cmd *parseline(char *line)
 	return cmd;
 }
 
+void run_file(struct cmd *cmd)
+{
+	switch(dfork()) {
+	case 0:
+		printf("%s\n", cmd->argv[0]);
+		fflush(stdout);
+		execvp(cmd->argv[0], cmd->argv);
+		/* if error */
+		perror(cmd->argv[0]);
+		break;
+	default:
+		wait(NULL);
+		break;
+	}
+
+}
+
+void run_hist(struct cmd *cmd)
+{
+	if (cmd->argc > 2)
+		fprintf(stderr, "dsh: history: too many args\n");
+
+	char *h = cmd->argc == 1 ? get_hist_entry(0) : get_hist_entry(atoi(cmd->argv[1]));
+
+	struct cmd *hist_cmd = parseline(h);
+	run_file(hist_cmd->argv[0], hist_cmd->argv);
+}
+
 int main()
 {
+	hist_init();
 	char line[4096];
 
 	while(getcmd(line, sizeof(line))) {
 		struct cmd *cmd = parseline(line);
-		
 		if (!cmd)
 			continue;
-		
-		switch(dfork()) {
-		case 0:
-			printf("%s\n", cmd->argv[0]);
-			fflush(stdout);
-			execvp(cmd->argv[0], cmd->argv);
-			/* if error */
-			perror(cmd->argv[0]);
-			break;
-		default:
-			wait(NULL);
-		}
+
+		if (!strcmp(cmd->argv[0], "history"))
+			list_hist(cmd->argc == 1 ? 0 : atoi(cmd->argv[1]));
+		else
+			run_file(cmd);
 	}
 	printf("\n");
 }
