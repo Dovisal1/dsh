@@ -1,2 +1,3 @@
 dsh
 *.o
+.dsh_history
