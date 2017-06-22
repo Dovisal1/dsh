@@ -91,6 +91,7 @@ void run_file(struct cmd *cmd)
 		execvp(cmd->argv[0], cmd->argv);
 		/* if error */
 		perror(cmd->argv[0]);
+		exit(1);
 		break;
 	default:
 		wait(NULL);
