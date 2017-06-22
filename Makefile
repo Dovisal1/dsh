@@ -1,9 +1,17 @@
 
-all: dsh
+CFLAGS := -g -Wall
 
-dsh:
+PROGRAM := dsh
+
+all: $(PROGRAM)
+
+$(PROGRAM): dsh.o history.o
+
+dsh.o: history.o history.h
+
+history.o: history.h
 
 clean:
-	$(RM) dsh
+	$(RM) *.o $(PROGRAM)
 
 .PHONY: all clean
