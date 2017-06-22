@@ -10,30 +10,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "builtin.h"
 #include "history.h"
-
-#define PROMPT "dsh> "
-#define WHITESPACE " \t\r\n\v"
-#define SYMBOLS
-#define DELIMS WHITESPACE SYMBOLS
-
-struct cmd {
-	int argc;
-	char **argv;
-	char *base;
-};
-
-int getcmd(char *buf, int sz)
-{
-	printf(PROMPT);
-	fflush(stdout);
-	if (fgets(buf, sz, stdin) == NULL)
-		return 0;
-	return 1;
-}
+#include "cmd.h"
 
 /* exec, never return */
-
 void die(int status, const char *fmt, ...)
 {
 	va_list ap;
@@ -52,38 +33,6 @@ pid_t dfork()
 	return pid;
 }
 
-struct cmd *parseline(char *line)
-{
-	struct cmd *cmd = malloc(sizeof(struct cmd));
-	line = strdup(line);
-	*cmd = (struct cmd){.base=line};
-
-	char *scratch = NULL;
-	char *txt = strtok_r(line, DELIMS, &scratch);
-
-	if (!txt) {
-		free(cmd);
-		return NULL;
-	}
-
-	while (txt) {
-		cmd->argv = realloc(cmd->argv, sizeof(char*) * ++(cmd->argc));
-		cmd->argv[cmd->argc-1] = txt;
-		txt = strtok_r(NULL, DELIMS, &scratch);
-	}
-
-	return cmd;
-}
-
-void free_cmd(struct cmd *cmd)
-{
-	if (!cmd)
-		return;
-	free (cmd->base);
-	free (cmd->argv);
-	free (cmd);
-}
-
 void run_file(struct cmd *cmd)
 {
 	switch(dfork()) {
@@ -100,18 +49,60 @@ void run_file(struct cmd *cmd)
 
 }
 
-void run_hist(struct cmd *cmd)
+void run_builtin(struct cmd *cmd)
 {
-	if (cmd->argc > 2)
-		fprintf(stderr, "dsh: history: too many args\n");
-
-	char *h = cmd->argc == 1 ? get_hist_entry(0) : get_hist_entry(atoi(cmd->argv[1]));
-
-	struct cmd *hist_cmd = parseline(h);
-	run_file(hist_cmd);
+	switch(builtin_num(cmd)) {
+	case 0: /* echo */
+		run_echo(cmd);
+		break;
+	case 1:
+		run_cd(cmd);
+		break;
+	case 2:
+		run_history(cmd);
+		break;
+	default:
+		fprintf(stderr, "dsh: builtin panic\n");
+	}
 }
 
+void run_recall(struct cmd *cmd);
 
+void runcmd(struct cmd *cmd)
+{
+	if (cmd->argv[0][0] == '!')
+		run_recall(cmd);
+	else {
+		add_hist_entry(cmd->cl);
+		if (is_builtin(cmd))
+			run_builtin(cmd);
+		else
+			run_file(cmd);
+	}
+}
+
+void run_recall(struct cmd *cmd)
+{
+	char *argv0 = cmd->argv[0];
+	argv0++; /* we know *argv0=='!' */
+
+	int hist_item;
+
+	if(*argv0 == '!') /* !! */
+		hist_item = -1;
+	else
+		hist_item = atoi(argv0);
+
+	char *h = get_hist_entry(hist_item);
+
+	if (!h)
+		return;
+
+	struct cmd *hist_cmd = parseline(h);
+	puts(h);
+	runcmd(hist_cmd);
+	free_cmd(hist_cmd);
+}
 
 int main()
 {
@@ -119,17 +110,12 @@ int main()
 	char line[4096];
 
 	while(getcmd(line, sizeof(line))) {
-		add_hist_entry(line);
 		struct cmd *cmd = parseline(line);
 
 		if (!cmd)
 			continue;
 
-		if (!strcmp(cmd->argv[0], "history"))
-			list_hist(cmd->argc == 1 ? 0 : atoi(cmd->argv[1]));
-		else
-			run_file(cmd);
-
+		runcmd(cmd);
 		free_cmd(cmd);
 	}
 	hist_clean();

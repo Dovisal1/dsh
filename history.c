@@ -33,16 +33,20 @@ void add_hist_entry(char *line)
 
 char *get_hist_entry(int n)
 {
-	if (!n) {
-		return history[hist_entry];
-	} else if (n > 0) {
-		int ind = hist_entry - n;
-		if (ind < 0)
-			ind += HISTSIZE;
-		return history[ind];
-	} else {
+	int ind;
+
+	if (n > HISTSIZE || n < -HISTSIZE)
 		return NULL;
-	}
+
+	if (n >= 0)
+		ind = n;
+	else
+		ind = hist_entry + n;
+
+	if (hist_entry < 0)
+		hist_entry += HISTSIZE;
+
+	return history[ind];
 }
 
 void list_hist(int n)
