@@ -12,7 +12,7 @@
 
 #define PROMPT "dsh> "
 #define WHITESPACE " \t\r\n\v"
-#define SYMBOLS "<|>&;();"
+#define SYMBOLS
 #define DELIMS WHITESPACE SYMBOLS
 
 struct cmd {
@@ -84,7 +84,11 @@ int main()
 		
 		switch(dfork()) {
 		case 0:
+			printf("%s\n", cmd->argv[0]);
+			fflush(stdout);
 			execvp(cmd->argv[0], cmd->argv);
+			/* if error */
+			perror(cmd->argv[0]);
 			break;
 		default:
 			wait(NULL);
