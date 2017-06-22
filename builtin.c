@@ -25,18 +25,18 @@ int is_builtin(struct cmd *cmd)
 	return 0;
 }
 
-size_t builtin_num(struct cmd *cmd)
+size_t builtin_num(struct cmd * cmd)
 {
 	for (int i = 0; i < n_builtins; i++)
 		if (!strcmp(cmd->argv[0], builtins[i]))
 			return i;
-	return n_builtins; /* error */
+	return n_builtins;	/* error */
 }
 
 void run_echo(struct cmd *cmd)
 {
 	for (size_t i = 1; i < cmd->argc; i++)
-		printf("%s%c", cmd->argv[i], i+1 < cmd->argc ? ' ' : '\n');
+		printf("%s%c", cmd->argv[i], i + 1 < cmd->argc ? ' ' : '\n');
 }
 
 void run_cd(struct cmd *cmd)
@@ -52,4 +52,4 @@ void run_cd(struct cmd *cmd)
 void run_history(struct cmd *cmd)
 {
 	list_hist(cmd->argc == 1 ? 0 : atoi(cmd->argv[1]));
-}	
+}

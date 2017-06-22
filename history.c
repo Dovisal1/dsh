@@ -11,8 +11,8 @@ int hist_width;
 
 char *chomp(char *s)
 {
-	int last = strlen(s)-1;
-	if(s[last] == '\n')
+	int last = strlen(s) - 1;
+	if (s[last] == '\n')
 		s[last] = '\0';
 	return s;
 }
@@ -26,7 +26,7 @@ void add_hist_entry(char *line)
 		free(history[hist_entry]);
 
 	history[hist_entry] = chomp(strdup(line));
-	
+
 	if (++hist_entry == HISTSIZE)
 		hist_entry = 0;
 }
@@ -60,23 +60,23 @@ void list_hist(int n)
 		i = hist_entry - n;
 		if (i < 0)
 			i += HISTSIZE;
-	} else  {
-		i = (hist_entry+1) % HISTSIZE;
+	} else {
+		i = (hist_entry + 1) % HISTSIZE;
 	}
 
-	for(; i != hist_entry; i = (i+1) % HISTSIZE) {
-		if(!history[i])
+	for (; i != hist_entry; i = (i + 1) % HISTSIZE) {
+		if (!history[i])
 			continue;
 
 		printf(" %*d  %s\n", hist_width, order, history[i]);
-		order++; /* don't advance if skipping */
+		order++;	/* don't advance if skipping */
 	}
 }
 
 static int ndigits(int n)
 {
 	int r;
-	for(r = 0; n; r++)
+	for (r = 0; n; r++)
 		n /= 10;
 	return r;
 }
@@ -85,7 +85,7 @@ void hist_init()
 {
 	hist_width = ndigits(HISTSIZE);
 	hist_entry = 0;
-	history = malloc(HISTSIZE * sizeof(char*));
+	history = malloc(HISTSIZE * sizeof(char *));
 
 	for (size_t i = 0; i < HISTSIZE; i++)
 		history[i] = NULL;

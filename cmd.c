@@ -10,7 +10,6 @@
 #define SYMBOLS
 #define DELIMS WHITESPACE SYMBOLS
 
-
 int getcmd(char *buf, int sz)
 {
 	printf(PROMPT);
@@ -24,7 +23,10 @@ struct cmd *parseline(char *line)
 {
 	struct cmd *cmd = malloc(sizeof(struct cmd));
 	line = strdup(line);
-	*cmd = (struct cmd){.base=line,.cl=strdup(line)};
+	
+	*cmd = (struct cmd) {
+		.base = line,.cl = strdup(line)
+	};
 
 	char *scratch = NULL;
 	char *txt = strtok_r(line, DELIMS, &scratch);
@@ -35,13 +37,13 @@ struct cmd *parseline(char *line)
 	}
 
 	while (txt) {
-		cmd->argv = realloc(cmd->argv, sizeof(char*) * ++(cmd->argc));
-		cmd->argv[cmd->argc-1] = txt;
+		cmd->argv = realloc(cmd->argv, sizeof(char *) * ++(cmd->argc));
+		cmd->argv[cmd->argc - 1] = txt;
 		txt = strtok_r(NULL, DELIMS, &scratch);
 	}
 
 	/* null terminate argv for execvp */
-	cmd->argv = realloc(cmd->argv, sizeof(char*) * (cmd->argc+1));
+	cmd->argv = realloc(cmd->argv, sizeof(char *) * (cmd->argc + 1));
 	cmd->argv[cmd->argc] = NULL;
 
 	return cmd;
