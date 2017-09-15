@@ -58,7 +58,8 @@ void run_file(struct cmd *cmd)
 		break;
 	default:
 		fg_pid = pid;
-		wait(NULL);
+		if (strcmp(cmd->argv[cmd->argc - 1], "&"))
+			wait(NULL);
 		break;
 	}
 
